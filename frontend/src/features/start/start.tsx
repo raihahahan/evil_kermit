@@ -1,7 +1,15 @@
 import { useState } from "react";
-import Image from "next/image";
 import { Inter } from "next/font/google";
-// import CircularProgress from "@mui/material/CircularProgress";
+
+interface FormState {
+  responded: boolean;
+  inputValue: string;
+  usernameValue: string;
+  whitelistedContacts: string[];
+  newWhitelistedContact: string;
+  passwordValue: string;
+  passwordDisabled: boolean;
+}
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,11 +20,12 @@ function getInstructionalText(responded: boolean): string {
 }
 
 export default function Start() {
-  const [formState, setFormState] = useState({
+  const [formState, setFormState] = useState<FormState>({
     responded: false,
     inputValue: "",
     usernameValue: "",
-    whitelistedContactsValue: "",
+    whitelistedContacts: [],
+    newWhitelistedContact: "",
     passwordValue: "",
     passwordDisabled: true,
   });
@@ -31,6 +40,24 @@ export default function Start() {
       });
     };
 
+  const handleAddWhitelistedContact = () => {
+    setFormState(prevFormState => ({
+      ...prevFormState,
+      whitelistedContacts: [
+        ...prevFormState.whitelistedContacts,
+        prevFormState.newWhitelistedContact,
+      ],
+      newWhitelistedContact: "",
+    }));
+  };
+
+  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState({
+      ...formState,
+      passwordValue: event.target.value,
+    });
+  };
+
   const handleSubmitFirstStep = async () => {
     setLoading(true);
     setTimeout(() => {
@@ -43,28 +70,22 @@ export default function Start() {
     }, 3000);
   };
 
-  const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormState({
-      ...formState,
-      passwordValue: event.target.value,
-    });
-  };
-
-  const handleSubmitSecondStep = () => {
-    console.log("Password form submitted");
-  };
-
   return (
     <main
       className={`flex h-screen w-screen flex-col items-center justify-center p-24 ${inter.className}`}
     >
-      <div className="mb-32 grid text-center w-1/2 h-1/2">
+      <div className="mb-32 grid text-center w-1/2 h-1/2 relative">
         <div className="w-full h-full group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
           <h2 className={`mb-3 text-2xl font-semibold`}>
             {getInstructionalText(formState.responded)}
           </h2>
 
           <form
+            onKeyDown={e => {
+              if (e.key == "Enter") {
+                e.preventDefault();
+              }
+            }}
             onSubmit={e => {
               e.preventDefault();
               handleSubmitFirstStep();
@@ -76,7 +97,7 @@ export default function Start() {
                 htmlFor="phoneNumber"
                 className="mb-1 text-base font-semibold"
               >
-                Phone Number
+                Phone Number (no spaces)
               </label>
               <input
                 type="text"
@@ -86,7 +107,7 @@ export default function Start() {
                 disabled={formState.responded}
                 className="p-2 border border-gray-300 w-full"
                 title="Phone Number"
-                placeholder="(e.g. +6512345678)"
+                placeholder="(e.g. 6512345678)"
               />
             </div>
 
@@ -105,7 +126,7 @@ export default function Start() {
                 disabled={formState.responded}
                 className="p-2 border border-gray-300 w-full"
                 title="Username"
-                placeholder="Enter your username"
+                placeholder="(e.g. @abcde)"
               />
             </div>
 
@@ -116,17 +137,59 @@ export default function Start() {
               >
                 Whitelisted Contacts
               </label>
-              <input
-                type="text"
-                id="whitelistedContacts"
-                value={formState.whitelistedContactsValue}
-                onChange={handleInputChange("whitelistedContactsValue")}
-                disabled={formState.responded}
-                className="p-2 border border-gray-300 w-full"
-                title="Whitelisted Contacts"
-                placeholder="Enter whitelisted contacts"
-              />
+              <div className="flex gap-2 items-center flex-wrap w-full">
+                {formState.whitelistedContacts.map((contact, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-200 rounded p-2 flex items-center gap-2"
+                  >
+                    {contact}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedContacts = [
+                          ...formState.whitelistedContacts,
+                        ];
+                        updatedContacts.splice(index, 1);
+                        setFormState({
+                          ...formState,
+                          whitelistedContacts: updatedContacts,
+                        });
+                      }}
+                      className="text-red-500"
+                    >
+                      X
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            <div className="flex flex-col items-start">
+              <div className="flex items-center gap-2 flex-wrap w-full">
+                <div className="flex-grow">
+                  <input
+                    type="text"
+                    id="whitelistedContacts"
+                    value={formState.newWhitelistedContact}
+                    onChange={handleInputChange("newWhitelistedContact")}
+                    disabled={formState.responded}
+                    className="p-2 border border-gray-300 w-full rounded-lg"
+                    title="Whitelisted Contacts"
+                    placeholder="Enter whitelisted contacts"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddWhitelistedContact}
+                  disabled={formState.responded}
+                  className="p-2 bg-blue-500 text-white rounded-lg"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+
             {formState.responded && (
               <div className="flex flex-col items-start col-span-2">
                 <label
@@ -147,6 +210,7 @@ export default function Start() {
             )}
             <button
               type="submit"
+              // onClick={handleSubmitFirstStep}
               className={`col-span-2 flex items-center justify-center m-2 p-2 bg-blue-500 text-white relative w-full h-[45px] rounded-lg`}
               disabled={formState.responded}
             >
