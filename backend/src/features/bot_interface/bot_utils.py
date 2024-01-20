@@ -1,13 +1,5 @@
 from database.supabase import supabase
-from dotenv import load_dotenv
-import os
 import time
-from typing import List
-
-load_dotenv()
-
-SUPABASE_ID = os.getenv("SUPABASE_ID")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 def callback(res, payload, username):
     print("Callback 1: ", payload)
@@ -20,16 +12,6 @@ def callback(res, payload, username):
 
 def respond_from_message(message: str) -> str:
     return "The function to produce this message has not been implemented yet :("
-
-def get_whitelist(username: str) -> List[str]:
-    data = supabase.from_("user") \
-                    .select("whitelist") \
-                    .eq("username", username) \
-                    .execute()
-    
-    if len(data.data) == 1:
-        return data.data[0]["whitelist"]
-    return []
 
 def get_phone_passcode(username: str) -> str:
     timeout_limit = 120

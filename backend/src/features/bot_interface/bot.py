@@ -2,20 +2,23 @@ from dotenv import load_dotenv
 import time
 from telethon import TelegramClient, events
 import os
-from features.bot_interface.bot_utils import respond_from_message, get_phone_passcode, get_whitelist
+from features.bot_interface.bot_utils import respond_from_message, get_phone_passcode
+from typing import List
+import asyncio
 
 load_dotenv()
 
 class Bot():
-    def __init__(self, username, phone):
+    def __init__(self, username: str, phone: str, whitelist: List[str]):
         self.username = username
         self.phone = phone
-        self.whitelist = get_whitelist(username)
+        self.whitelist = whitelist
         api_id = os.getenv("API_ID")
         api_hash = os.getenv("API_HASH")
         self.client = TelegramClient(username, api_id, api_hash, sequential_updates=True)
+        self.loop = asyncio.get_event_loop()
 
-    def start(self):        
+    async def start(self):        
         @self.client.on(events.NewMessage(incoming=True))
         async def handle_new_message(event):
             if event.is_private:  # only auto-reply to private chats
@@ -32,12 +35,24 @@ class Bot():
 
         print(time.asctime(), '-', 'Auto-replying...')
 
-        self.client.start(self.phone, code_callback=lambda : get_phone_passcode(self.username))
-        self.client.run_until_disconnected()
+        def code_callback(self, username):
+            # Run the synchronous function in a separate thread
+            result = self.loop.run_in_executor(None, lambda : get_phone_passcode(username))
+            return result
+
+        await self.client.start(self.phone, code_callback=lambda : code_callback(self, self.username))
+        await self.client.run_until_disconnected()
         print(time.asctime(), '-', 'Stopped!')
 
-    def stop(self):
-        self.client.disconnect()
+    async def stop(self):
+        root_directory = os.getcwd()
+        for file_name in os.listdir(root_directory):
+            if file_name == f"{self.username}.session":
+                file_path = os.path.join(root_directory, file_name)
+                os.remove(file_path)
+                print(f"Removed: {file_path}")
+                break
+        await self.client.disconnect()
 
 
 
