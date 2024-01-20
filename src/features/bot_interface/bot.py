@@ -15,10 +15,23 @@ class Bot():
         api_hash = os.getenv("API_HASH")
         self.client = TelegramClient(session_file, api_id, api_hash, sequential_updates=True)
 
-    async def get_chat_history(self):
-        messages = await self.client.get_messages('Jyothika_C', limit=10)
-        print(messages)
-        return messages
+    def get_chat_history(self, person):
+        messages = self.client.iter_messages(person,reverse=True)
+        # Open text file in write+text mode
+        text_file = open("sample.txt", "wt")
+
+        # Write content to file
+        for message in messages:
+            n = text_file.write(str(message.peer_id.user_id) + ":" + message.message +  "\n")
+
+            if n == len(message.message):
+                print("Success! String written to text file.")
+            else:
+                print("Failure! String not written to text file.")
+
+        # Close file
+        text_file.close()
+        
 
     def start(self):        
         phone = os.getenv("PHONE")
@@ -39,8 +52,7 @@ class Bot():
 
         print(time.asctime(), '-', 'Auto-replying...')
         self.client.start(phone, password)
-        for message in self.client.iter_messages('raihahan',reverse=True):
-            print(message.sender_id, ':', message.text)
+        self.get_chat_history('apollotan')
         self.client.run_until_disconnected()
         print(time.asctime(), '-', 'Stopped!')
 
