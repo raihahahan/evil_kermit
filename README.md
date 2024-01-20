@@ -29,10 +29,10 @@
 <br />
 <div align="center">
 
-<h3 align="center">MakeMyDecision</h3>
+<h3 align="center">Evil Kermit</h3>
 
   <p align="center">
-    A NextJS project that helps you make decisions.
+    Automatically reply just the way you speak.
     <br />
     <a href="https://github.com/raihahahan/evil_kermit"><strong>Explore the docs »</strong></a>
     <br />
