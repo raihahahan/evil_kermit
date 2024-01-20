@@ -1,13 +1,5 @@
 from database.supabase import supabase
-from dotenv import load_dotenv
-import os
 import time
-from typing import List
-
-load_dotenv()
-
-SUPABASE_ID = os.getenv("SUPABASE_ID")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 def callback(res, payload, username):
     print("Callback 1: ", payload)

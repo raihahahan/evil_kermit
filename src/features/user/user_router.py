@@ -20,7 +20,7 @@ async def start_user(username: str, phone: str, whitelist: List[str]):
         bot = Bot(phone=phone, username=username, whitelist=whitelist)
         bots.append(bot)
         asyncio.gather(bot.start())
-
+        return { "message": "Success" }
     except Exception as e:
         print(e)
 
@@ -40,10 +40,11 @@ def confirm_passcode(username: str, passcode: str):
     
 @router.post("/stopClient")
 async def stop_client(username: str):
-    # loop = asyncio.new_event_loop()
-    # asyncio.set_event_loop(loop)  
-    for bot in bots:
-        if bot.username == username:
-            asyncio.gather(bot.stop())
-            return { "messsage": "Bot successfully stopped."}
-    return { "message": "Failed to stop bot."}
+    try:
+        for bot in bots:
+            if bot.username == username:
+                asyncio.gather(bot.stop())
+                return { "messsage": "Bot successfully stopped."}
+        return { "message": "Failed to stop bot."}
+    except Exception as e:
+        print("")
