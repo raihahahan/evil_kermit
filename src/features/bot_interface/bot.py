@@ -1,30 +1,40 @@
 from dotenv import load_dotenv
+import time
+from telethon import TelegramClient, events
 import os
-from telegram.ext import ApplicationBuilder, CommandHandler
-import logging 
-from features.bot_interface import bot_command_handlers
+from features.bot_interface.bot_utils import respond_from_message, whitelist
 
 load_dotenv()
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-
 class Bot():
     def __init__(self):
-        self.bot = ApplicationBuilder().token(os.getenv("BOT_API")).build()
+        session_file = os.getenv("SESSION_FILE")
+        api_id = os.getenv("API_ID")
+        api_hash = os.getenv("API_HASH")
+        self.client = TelegramClient(session_file, api_id, api_hash, sequential_updates=True)
 
-    def run(self):
-        start_handler = CommandHandler('start', bot_command_handlers.start)
-        clone_handler = CommandHandler('clone', bot_command_handlers.clone)
+    def start(self):        
+        phone = os.getenv("PHONE")
+        password = os.getenv("PASSWORD")
+        @self.client.on(events.NewMessage(incoming=True))
+        async def handle_new_message(event):
+            if event.is_private:  # only auto-reply to private chats
+                sender = await event.get_sender()
+                from_ = await event.client.get_entity(event.from_id)  # this lookup will be cached by telethon
+                if not from_.bot and sender.username in whitelist:  # don't auto-reply to bots
+                    print("------")
+                    print(time.asctime(), '-', event.message)  # optionally log time and message
+                    print("Message is: ", event.message.message)
+                    time.sleep(1)  # pause for 1 second to rate-limit automatic replies
+                    sender_message = event.message.message
+                    message = respond_from_message(sender_message)
+                    await event.respond(message)
 
-        # add handlers
-        self.bot.add_handler(start_handler)
-        self.bot.add_handler(clone_handler)
+        print(time.asctime(), '-', 'Auto-replying...')
+        self.client.start(phone, password)
+        self.client.run_until_disconnected()
+        print(time.asctime(), '-', 'Stopped!')
 
-        # start polling
-        self.bot.run_polling()
 
 
 
