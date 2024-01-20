@@ -1,5 +1,8 @@
-def main():
-    pass
+from features.bot_interface.bot import Bot
 
-if __name__ == "main":
+def main():
+    bot = Bot()
+    bot.run()
+
+if __name__ == "__main__":
     main()
