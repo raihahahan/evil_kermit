@@ -98,13 +98,14 @@ Evil Kermit is a Telegram client designed to enable automatic user replies on Te
    git clone https://github.com/raihahahan/evil_kermit.git
    ```
 2. Open two terminals, one for frontend, the other for backend.
-3. Run the backend
+3. Retrieve the required Supabase keys, URL, ID, Telegram API Hash, Id etc and paste into .env, following .env.example format.
+4. Run the backend
    ```sh
    cd backend
    pip install -r requirements.txt
    python src/main.py
    ```
-4. Run the frontend
+5. Run the frontend
    ```sh
    cd frontend
    npm install
