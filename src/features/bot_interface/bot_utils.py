@@ -21,16 +21,6 @@ def callback(res, payload, username):
 def respond_from_message(message: str) -> str:
     return "The function to produce this message has not been implemented yet :("
 
-def get_whitelist(username: str) -> List[str]:
-    data = supabase.from_("user") \
-                    .select("whitelist") \
-                    .eq("username", username) \
-                    .execute()
-    
-    if len(data.data) == 1:
-        return data.data[0]["whitelist"]
-    return []
-
 def get_phone_passcode(username: str) -> str:
     timeout_limit = 120
     timeout_curr = 0
