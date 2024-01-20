@@ -3,6 +3,8 @@ import time
 from telethon import TelegramClient, events
 import os
 from features.bot_interface.bot_utils import respond_from_message, whitelist
+from telethon.tl.functions.messages import (GetHistoryRequest)
+import datetime
 
 load_dotenv()
 
@@ -12,6 +14,11 @@ class Bot():
         api_id = os.getenv("API_ID")
         api_hash = os.getenv("API_HASH")
         self.client = TelegramClient(session_file, api_id, api_hash, sequential_updates=True)
+
+    async def get_chat_history(self):
+        messages = await self.client.get_messages('Jyothika_C', limit=10)
+        print(messages)
+        return messages
 
     def start(self):        
         phone = os.getenv("PHONE")
@@ -32,6 +39,8 @@ class Bot():
 
         print(time.asctime(), '-', 'Auto-replying...')
         self.client.start(phone, password)
+        for message in self.client.iter_messages('raihahan',reverse=True):
+            print(message.sender_id, ':', message.text)
         self.client.run_until_disconnected()
         print(time.asctime(), '-', 'Stopped!')
 

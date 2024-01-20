@@ -1,4 +1,4 @@
-whitelist = ["jeonwonje", "apollotan", "Jyothika_C"]
+whitelist = ["jeonwonje", "apollotan", "Jyothika_C", "raihahan"]
 
 
 def respond_from_message(message: str) -> str:
