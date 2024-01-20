@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Inter } from "next/font/google";
+import { useRouter } from "next/router";
 
 interface FormState {
   responded: boolean;
@@ -31,6 +32,7 @@ export default function Start() {
   });
 
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleInputChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +43,7 @@ export default function Start() {
     };
 
   const handleAddWhitelistedContact = () => {
-    setFormState(prevFormState => ({
+    setFormState((prevFormState) => ({
       ...prevFormState,
       whitelistedContacts: [
         ...prevFormState.whitelistedContacts,
@@ -58,16 +60,52 @@ export default function Start() {
     });
   };
 
+  const handleSubmitSecondStep = async () => {
+    setLoading(true);
+    setFormState({
+      ...formState,
+      passwordDisabled: true,
+    });
+    await fetch("/api/user?action=confirm", {
+      method: "POST",
+      body: JSON.stringify({
+        username: formState.usernameValue,
+        passcode: formState.passwordValue,
+      }),
+    });
+    setLoading(false);
+  };
+
+  const handleStopBot = async () => {
+    setLoading(true);
+    await fetch("/api/user?action=stop", {
+      method: "POST",
+      body: JSON.stringify({
+        username: formState.usernameValue,
+      }),
+    });
+    setLoading(false);
+    router.reload();
+  };
+
   const handleSubmitFirstStep = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setFormState({
-        ...formState,
-        responded: true,
-        passwordDisabled: false,
-      });
-      setLoading(false);
-    }, 3000);
+    setFormState({
+      ...formState,
+      responded: true,
+      passwordDisabled: false,
+    });
+
+    await fetch("/api/user?action=start", {
+      method: "POST",
+      body: JSON.stringify({
+        username: formState.usernameValue,
+        phone: formState.inputValue,
+        whitelist: formState.whitelistedContacts,
+      }),
+    });
+
+    setLoading(false);
   };
 
   return (
@@ -81,14 +119,18 @@ export default function Start() {
           </h2>
 
           <form
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key == "Enter") {
                 e.preventDefault();
               }
             }}
-            onSubmit={e => {
+            onSubmit={(e) => {
               e.preventDefault();
-              handleSubmitFirstStep();
+              if (!formState.responded) {
+                handleSubmitFirstStep();
+              } else {
+                handleSubmitSecondStep();
+              }
             }}
             className="flex flex-col gap-4 w-full"
           >
@@ -126,7 +168,7 @@ export default function Start() {
                 disabled={formState.responded}
                 className="p-2 border border-gray-300 w-full"
                 title="Username"
-                placeholder="(e.g. @abcde)"
+                placeholder="(e.g. abcde)"
               />
             </div>
 
@@ -146,6 +188,7 @@ export default function Start() {
                     {contact}
                     <button
                       type="button"
+                      disabled={formState.responded}
                       onClick={() => {
                         const updatedContacts = [
                           ...formState.whitelistedContacts,
@@ -181,6 +224,11 @@ export default function Start() {
                 </div>
                 <button
                   type="button"
+                  onKeyDown={(e) => {
+                    if (e.key == "Enter") {
+                      handleAddWhitelistedContact();
+                    }
+                  }}
                   onClick={handleAddWhitelistedContact}
                   disabled={formState.responded}
                   className="p-2 bg-blue-500 text-white rounded-lg"
@@ -209,12 +257,25 @@ export default function Start() {
               </div>
             )}
             <button
-              type="submit"
-              // onClick={handleSubmitFirstStep}
-              className={`col-span-2 flex items-center justify-center m-2 p-2 bg-blue-500 text-white relative w-full h-[45px] rounded-lg`}
-              disabled={formState.responded}
+              type={
+                formState.passwordDisabled && formState.responded
+                  ? "button"
+                  : "submit"
+              }
+              onClick={
+                formState.passwordDisabled && formState.responded
+                  ? handleStopBot
+                  : undefined
+              }
+              className={`col-span-2 flex items-center justify-center m-2 p-2 ${
+                formState.passwordDisabled && formState.responded
+                  ? "bg-red-500"
+                  : "bg-blue-500"
+              } text-white relative w-full h-[45px] rounded-lg`}
             >
-              Submit
+              {formState.passwordDisabled && formState.responded
+                ? "Stop"
+                : "Submit"}
               {loading && (
                 <div className="object-contain grid place-items-center rounded-lg p-6">
                   <svg
@@ -229,16 +290,16 @@ export default function Start() {
                     <path
                       d="M32 3C35.8083 3 39.5794 3.75011 43.0978 5.20749C46.6163 6.66488 49.8132 8.80101 52.5061 11.4939C55.199 14.1868 57.3351 17.3837 58.7925 20.9022C60.2499 24.4206 61 28.1917 61 32C61 35.8083 60.2499 39.5794 58.7925 43.0978C57.3351 46.6163 55.199 49.8132 52.5061 52.5061C49.8132 55.199 46.6163 57.3351 43.0978 58.7925C39.5794 60.2499 35.8083 61 32 61C28.1917 61 24.4206 60.2499 20.9022 58.7925C17.3837 57.3351 14.1868 55.199 11.4939 52.5061C8.801 49.8132 6.66487 46.6163 5.20749 43.0978C3.7501 39.5794 3 35.8083 3 32C3 28.1917 3.75011 24.4206 5.2075 20.9022C6.66489 17.3837 8.80101 14.1868 11.4939 11.4939C14.1868 8.80099 17.3838 6.66487 20.9022 5.20749C24.4206 3.7501 28.1917 3 32 3L32 3Z"
                       stroke="currentColor"
-                      stroke-width="5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth={5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     ></path>
                     <path
                       d="M32 3C36.5778 3 41.0906 4.08374 45.1692 6.16256C49.2477 8.24138 52.7762 11.2562 55.466 14.9605C58.1558 18.6647 59.9304 22.9531 60.6448 27.4748C61.3591 31.9965 60.9928 36.6232 59.5759 40.9762"
                       stroke="currentColor"
-                      stroke-width="5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       className="text-gray-900"
                     ></path>
                   </svg>
