@@ -1,14 +1,3 @@
-# #Run once and restart the runtime
-# !pip install telebot
-# %pip install telebot
-# !pip install telethon
-# %pip install telethon
-# !pip install torch, transformers
-# %pip install torch, transformers
-# !pip install -U accelerate
-# %pip install -U accelerate
-# !pip install transformers[torch]
-# %pip install transformers[torch]
 import telebot
 import logging
 import os
@@ -24,15 +13,21 @@ from torch.utils.data import Dataset
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, GPT2Config
 from transformers import DataCollatorForLanguageModeling
 from transformers import Trainer, TrainingArguments
+from supabase import create_client, Client
 # from trainbot import build_model, get_response
 
-bot = telebot.TeleBot("6935474801:AAFi4WGxAQGnfy4I3y3GbaqmJrdiujCtU4g")
+# bot = telebot.TeleBot("6935474801:AAFi4WGxAQGnfy4I3y3GbaqmJrdiujCtU4g")
+bot = telebot.TeleBot("6897672158:AAGQuVTrn_XZLSdoZAy-D-ujl3X9_gVyPJo")
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 session_file = 'Jyothika_C.session'
 api_id = '24468532'
 api_hash = '12db7aeeabc14ee1b524422a8984b71e'
 whitelist = ['Jyothika_C', 'raihahan', 'apollotan']
+
+url: str = "https://jxkpnoxrzwybzxaindvb.supabase.co"
+key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4a3Bub3hyend5Ynp4YWluZHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU3MjM4MDEsImV4cCI6MjAyMTI5OTgwMX0.cVS-AMjZsmui6kQPviNgxpViach0lgRG1JeqYEDhhIY"
+supabase: Client = create_client(url, key)
 
 users = {}
 
@@ -69,7 +64,7 @@ def build_model(chat_data):
         output_dir="./gpt2-finetuned",
         overwrite_output_dir=True,
         num_train_epochs=3,
-        per_device_train_batch_size=100,
+        per_device_train_batch_size=20,
         save_steps=10_000,
         save_total_limit=2,
     )
@@ -93,15 +88,13 @@ def build_model(chat_data):
     return model, tokenizer
 
 def load_model(model_name):
-    model_filename = f"{MODELS_DIR}/{model_name}.joblib"
-    vectorizer_filename = f"{MODELS_DIR}/{model_name}_tokenizer.joblib"
+    model_filename = f"/content/{MODELS_DIR}/{model_name}.joblib"
+    vectorizer_filename = f"/content/{MODELS_DIR}/{model_name}_tokenizer.joblib"
 
     if os.path.exists(model_filename) and os.path.exists(vectorizer_filename):
         model = joblib.load(model_filename)
         vectorizer = joblib.load(vectorizer_filename)
         return model, vectorizer
-    else:
-        return None, None
 
 def build_model_endpoint(txt_data, model_name):
     model, tokenizer = build_model(txt_data)
@@ -146,6 +139,31 @@ def set_params(message):
     users[user_id]['client'] = TelegramClient(users[user_id]['username'], api_id, api_hash, sequential_updates=True)
     bot.reply_to(message, "hi")
 
+def get_phone_passcode(username: str) -> str:
+    timeout_limit = 120
+    timeout_curr = 0
+
+    while timeout_curr <= timeout_limit:
+        data = supabase.from_("login_passcode") \
+                        .select("login_passcode") \
+                        .eq("username", username) \
+                        .limit(1) \
+                        .execute()
+        if data.data is not None:
+            if len(data.data) == 1:
+                login_passcode = data.data[0]["login_passcode"]
+                if login_passcode is not None:
+                    supabase.from_("login_passcode") \
+                            .delete() \
+                            .eq("username", username) \
+                            .execute()
+                    print("Passcode: ", login_passcode)
+                    return login_passcode
+        print("waiting for login passcode for ", username, "...")      
+        time.sleep(5)
+        timeout_curr += 5
+    
+    return ""
 @bot.message_handler(commands=['setwhitelist'])
 def set_params(message):
     if message.text.strip() == "/setwhitelist":
@@ -183,7 +201,7 @@ def start_client(message):
         if event.is_private:  # only auto-reply to private chats
             sender = await event.get_sender()
             from_ = await event.client.get_entity(event.from_id)  # this lookup will be cached by telethon
-            if not from_.bot and sender.username in users[user_id]['whitelist']:  # don't auto-reply to bots
+            if not from_.bot and sender.username in whitelist:  # don't auto-reply to bots
                 print("------")
                 print(time.asctime(), '-', event.message)  # optionally log time and message
                 print("Message is: ", event.message.message)
@@ -200,6 +218,20 @@ def start_client(message):
 @bot.message_handler(commands=['trainbot'])
 def train_bot(message):
     return
+
+@bot.message_handler(commands=['otp'])
+def otp(message):
+    username = message.from_user.username
+    parsed_input = message.text.split(" ")
+    passcode = parsed_input[1]
+    passcode = passcode[::-1]
+    try:
+      supabase.from_("login_passcode") \
+              .insert({ "username": username, "login_passcode": passcode }) \
+              .execute()
+      return { "message": "Success!" }
+    except Exception as e:
+      print(e)
 
 
 # default handler for every other text
