@@ -78,9 +78,6 @@ Evil Kermit is a Telegram client designed to enable automatic user replies on Te
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Features
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
 
@@ -97,22 +94,8 @@ Evil Kermit is a Telegram client designed to enable automatic user replies on Te
    ```sh
    git clone https://github.com/raihahahan/evil_kermit.git
    ```
-2. Open two terminals, one for frontend, the other for backend.
-3. Create a new Supabase project. Copy the API key, URL and ID and paste it into a .env file following the format in .env.example.
-4. Create a table called login_passcode with the schema (username text, login_passcode text). Enable the RLS policy to all be true.
-5. Create a new Telegram application in https://my.telegram.org/. Copy the Telegram API Hash and Id and paste into .env, following .env.example format.
-6. Run the backend
-   ```sh
-   cd backend
-   pip install -r requirements.txt
-   python src/main.py
-   ```
-7. Run the frontend
-   ```sh
-   cd frontend
-   npm install
-   npm run dev
-   ```
+2. Go to the v2 folder and run the code in Jupyter notebook.
+3. Add in the required API keys.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
