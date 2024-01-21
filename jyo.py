@@ -1,3 +1,14 @@
+# #Run once and restart the runtime
+# !pip install telebot
+# %pip install telebot
+# !pip install telethon
+# %pip install telethon
+# !pip install torch, transformers
+# %pip install torch, transformers
+# !pip install -U accelerate
+# %pip install -U accelerate
+# !pip install transformers[torch]
+# %pip install transformers[torch]
 import telebot
 import logging
 import os
@@ -106,7 +117,7 @@ def build_model_endpoint(txt_data, model_name):
     return f"Model '{model_name}' built and saved successfully"
 
 def get_response(model_name, input_text):
-    model, tokenizer  =  load_model('/Jyothika_C')
+    model, tokenizer  =  load_model(model_name)
     input_ids = tokenizer.encode(input_text, return_tensors="pt")
 
     # Generate response
