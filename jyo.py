@@ -1,3 +1,15 @@
+# #Run once and restart the runtime
+# !pip install telebot
+# %pip install telebot
+# !pip install telethon
+# %pip install telethon
+# !pip install torch, transformers
+# %pip install torch, transformers
+# !pip install -U accelerate
+# %pip install -U accelerate
+# !pip install transformers[torch]
+# %pip install transformers[torch]
+
 import telebot
 import logging
 import os
@@ -16,8 +28,8 @@ from transformers import Trainer, TrainingArguments
 from supabase import create_client, Client
 # from trainbot import build_model, get_response
 
-# bot = telebot.TeleBot("6935474801:AAFi4WGxAQGnfy4I3y3GbaqmJrdiujCtU4g")
-bot = telebot.TeleBot("6897672158:AAGQuVTrn_XZLSdoZAy-D-ujl3X9_gVyPJo")
+bot = telebot.TeleBot("6935474801:AAFi4WGxAQGnfy4I3y3GbaqmJrdiujCtU4g")
+# bot = telebot.TeleBot("6897672158:AAGQuVTrn_XZLSdoZAy-D-ujl3X9_gVyPJo")
 logger = telebot.logger
 telebot.logger.setLevel(logging.DEBUG)
 session_file = 'Jyothika_C.session'
@@ -201,7 +213,7 @@ def start_client(message):
         if event.is_private:  # only auto-reply to private chats
             sender = await event.get_sender()
             from_ = await event.client.get_entity(event.from_id)  # this lookup will be cached by telethon
-            if not from_.bot and sender.username in whitelist:  # don't auto-reply to bots
+            if not from_.bot and sender.username in users[user_id]['whitelist']:  # don't auto-reply to bots
                 print("------")
                 print(time.asctime(), '-', event.message)  # optionally log time and message
                 print("Message is: ", event.message.message)
